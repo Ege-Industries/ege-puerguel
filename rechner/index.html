@@ -1,0 +1,259 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Dubai Rendite-Rechner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: calculator sheet. Inputs left in grouped fieldsets, a sticky results column right, a 10-year chart below. Sand paper with desert teal. */
+:root {
+  --bg: #f4f1ea;
+  --card: #fffdf8;
+  --ink: #1d2226;
+  --muted: #6a6f73;
+  --line: #e2dccf;
+  --accent: #0f6a66;
+  --accent-soft: #dcefec;
+  --gold: #b7791f;
+  --good: #1f7a46;
+  --bad: #b3261e;
+  --font: "Manrope", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #12171a; --card: #1a2125; --ink: #eef1f2; --muted: #9aa5aa; --line: #2b353a; --accent: #4fc6bf; --accent-soft: #173432; --gold: #e3b061; --good: #6fd39a; --bad: #ff8a80; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #12171a; --card: #1a2125; --ink: #eef1f2; --muted: #9aa5aa; --line: #2b353a; --accent: #4fc6bf; --accent-soft: #173432; --gold: #e3b061; --good: #6fd39a; --bad: #ff8a80; color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 60px; display: grid; gap: 22px; }
+header { display: grid; gap: 6px; }
+.eyebrow { font: 500 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+h1 { font-size: clamp(28px, 4vw, 42px); font-weight: 800; letter-spacing: -0.02em; margin: 0; line-height: 1.1; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 62ch; }
+.grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; min-width: 0; }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 12px; }
+fieldset + fieldset { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+legend { font-weight: 800; font-size: 16px; margin-bottom: 4px; padding: 0; }
+.row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+label { display: grid; gap: 5px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.field { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); overflow: hidden; }
+.field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.field input { border: 0; background: transparent; color: var(--ink); font: 700 16px var(--font); padding: 9px 10px; width: 100%; min-width: 0; font-variant-numeric: tabular-nums; }
+.field input:focus { outline: none; }
+.field span { font: 500 12px var(--mono); color: var(--muted); padding-right: 10px; white-space: nowrap; }
+.toggle { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); font-size: 14px; cursor: pointer; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+.results { position: sticky; top: 16px; display: grid; gap: 14px; }
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.kpi { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--bg); display: grid; gap: 2px; }
+.kpi span { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.kpi b { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.kpi small { font: 500 12px var(--mono); color: var(--muted); }
+.kpi.main { grid-column: 1 / -1; background: var(--accent-soft); border-color: transparent; }
+.kpi.main b { font-size: 38px; color: var(--accent); }
+.pos { color: var(--good); }
+.neg { color: var(--bad); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+td { padding: 6px 0; border-bottom: 1px solid var(--line); }
+td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+tr:last-child td { border-bottom: 0; }
+.badge { display: flex; gap: 10px; align-items: flex-start; border-radius: 12px; padding: 12px 14px; background: color-mix(in srgb, var(--gold) 14%, transparent); font-size: 14px; }
+.badge b { color: var(--gold); }
+.chart-card h2 { font-size: 18px; margin: 0 0 4px; }
+.chart-card p { margin: 0 0 12px; color: var(--muted); font-size: 13.5px; }
+.chart { width: 100%; overflow-x: auto; }
+.chart svg { display: block; width: 100%; min-width: 520px; height: auto; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 8px; }
+.legend i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.note { font-size: 12.5px; color: var(--muted); }
+footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+@media (max-width: 860px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .results { position: static; }
+}
+@media (max-width: 460px) {
+  .row, .kpis { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow" id="brand">Dubai · Immobilien</span>
+    <h1>Was bringt deine Wohnung in Dubai wirklich?</h1>
+    <p>Kaufpreis und Miete eintragen, der Rechner zieht alle Kosten ab: Kaufnebenkosten, Servicegebühren, Leerstand, Verwaltung und auf Wunsch die Finanzierung. Ergebnis in Dirham und Euro.</p>
+  </header>
+
+  <div class="grid">
+    <form class="card" id="form" autocomplete="off">
+      <fieldset>
+        <legend>Objekt</legend>
+        <div class="row">
+          <label for="price">Kaufpreis<div class="field"><input id="price" inputmode="numeric" value="1.200.000"><span>AED</span></div></label>
+          <label for="rent">Jahresmiete<div class="field"><input id="rent" inputmode="numeric" value="90.000"><span>AED</span></div></label>
+          <label for="size">Fläche<div class="field"><input id="size" inputmode="numeric" value="750"><span>sqft</span></div></label>
+          <label for="svc">Servicegebühr<div class="field"><input id="svc" inputmode="decimal" value="18"><span>AED/sqft/Jahr</span></div></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Laufende Kosten</legend>
+        <div class="row">
+          <label for="vac">Leerstand<div class="field"><input id="vac" inputmode="decimal" value="5"><span>%</span></div></label>
+          <label for="mgmt">Verwaltung<div class="field"><input id="mgmt" inputmode="decimal" value="5"><span>% der Miete</span></div></label>
+          <label for="maint">Instandhaltung<div class="field"><input id="maint" inputmode="decimal" value="0,5"><span>% vom Preis</span></div></label>
+          <label for="growth">Wertsteigerung<div class="field"><input id="growth" inputmode="decimal" value="3"><span>% pro Jahr</span></div></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Kaufnebenkosten</legend>
+        <div class="row">
+          <label for="dld">DLD-Gebühr<div class="field"><input id="dld" inputmode="decimal" value="4"><span>%</span></div></label>
+          <label for="agent">Makler<div class="field"><input id="agent" inputmode="decimal" value="2"><span>% + 5 % MwSt</span></div></label>
+          <label for="admin">Trustee und Gebühren<div class="field"><input id="admin" inputmode="numeric" value="4.720"><span>AED</span></div></label>
+          <label for="fx">Wechselkurs<div class="field"><input id="fx" inputmode="decimal" value="4,25"><span>AED je €</span></div></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Finanzierung</legend>
+        <label class="toggle" for="fin"><input type="checkbox" id="fin"> Mit Bankkredit rechnen</label>
+        <div class="row" id="fin-fields" hidden>
+          <label for="down">Eigenkapital<div class="field"><input id="down" inputmode="decimal" value="50"><span>% vom Preis</span></div></label>
+          <label for="rate">Zins<div class="field"><input id="rate" inputmode="decimal" value="4,5"><span>% pro Jahr</span></div></label>
+          <label for="years">Laufzeit<div class="field"><input id="years" inputmode="numeric" value="20"><span>Jahre</span></div></label>
+        </div>
+      </fieldset>
+    </form>
+
+    <aside class="results" aria-live="polite">
+      <div class="card" style="display:grid;gap:14px">
+        <div class="kpis">
+          <div class="kpi main"><span>Netto-Rendite</span><b id="k-net">–</b><small id="k-net-sub">nach allen Kosten</small></div>
+          <div class="kpi"><span>Brutto-Rendite</span><b id="k-gross">–</b></div>
+          <div class="kpi"><span id="k-cf-label">Überschuss pro Monat</span><b id="k-cf">–</b><small id="k-cf-aed">–</small></div>
+        </div>
+        <table>
+          <tbody>
+            <tr><td>Kaufnebenkosten</td><td id="t-costs">–</td></tr>
+            <tr><td>Gesamtinvestition</td><td id="t-total">–</td></tr>
+            <tr><td>Servicegebühr pro Jahr</td><td id="t-svc">–</td></tr>
+            <tr><td>Miete nach Leerstand</td><td id="t-eff">–</td></tr>
+            <tr id="tr-loan" hidden><td>Kreditrate pro Monat</td><td id="t-loan">–</td></tr>
+            <tr id="tr-coc" hidden><td>Rendite auf dein Eigenkapital</td><td id="t-coc">–</td></tr>
+          </tbody>
+        </table>
+        <div class="badge" id="golden" hidden><b>★</b><span>Ab 2 Mio. AED Kaufpreis kann die Immobilie für das <b>Golden Visa</b> (10 Jahre) reichen.</span></div>
+        <p class="note" style="margin:0">Keine Einkommensteuer auf Mieteinnahmen in den VAE für Privatpersonen. Steuern im Heimatland gesondert prüfen.</p>
+      </div>
+    </aside>
+  </div>
+
+  <section class="card chart-card">
+    <h2>Die nächsten 10 Jahre</h2>
+    <p id="chart-sub">Wert der Immobilie und aufsummierte Netto-Mieteinnahmen, bei der angenommenen Wertsteigerung.</p>
+    <div class="chart" id="chart"></div>
+    <div class="legend"><span><i style="background:var(--accent)"></i>Wert der Immobilie</span><span><i style="background:var(--gold)"></i>Netto-Mieteinnahmen, aufsummiert</span><span><i style="background:var(--muted)"></i>Gesamtinvestition</span></div>
+  </section>
+
+  <footer>
+    <span>Beispielwerte, keine Anlageberatung. Alle Annahmen oben anpassbar. Gebühren: DLD 4 %, Makler 2 % plus MwSt, Trustee und Registrierung ca. 4.720 AED, Hypothek-Eintrag 0,25 % des Kredits.</span>
+    <span id="credit">Gebaut von Ege Pürgül</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const parse = v => { let s = String(v).trim().replace(/\s/g, ""); if (!s.includes(",") && /^\d+\.\d{1,2}$/.test(s)) { const n = parseFloat(s); return isFinite(n) ? n : 0; } s = s.replace(/\./g, "").replace(",", "."); const n = parseFloat(s); return isFinite(n) ? n : 0; };
+  const nf0 = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 });
+  const nf1 = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const aed = n => nf0.format(Math.round(n)) + " AED";
+  const eur = n => nf0.format(Math.round(n)) + " €";
+  const pct = n => nf1.format(n) + " %";
+
+  // Firmenname aus ?firma=… (auf der eigenen Domain)
+  try {
+    const f = new URLSearchParams(location.search).get("firma");
+    if (f) { const clean = f.slice(0, 60); $("brand").textContent = "Rendite-Rechner für " + clean; document.title = "Rendite-Rechner · " + clean; }
+  } catch {}
+
+  const ids = ["price", "rent", "size", "svc", "vac", "mgmt", "maint", "growth", "dld", "agent", "admin", "fx", "down", "rate", "years"];
+  const v = () => Object.fromEntries(ids.map(k => [k, parse($(k).value)]));
+
+  // format money inputs on blur
+  ["price", "rent", "admin", "size"].forEach(k => $(k).addEventListener("blur", () => { const n = parse($(k).value); $(k).value = nf0.format(n); }));
+
+  $("fin").addEventListener("change", () => { $("fin-fields").hidden = !$("fin").checked; calc(); });
+  $("form").addEventListener("input", calc);
+  $("form").addEventListener("submit", e => e.preventDefault());
+
+  function calc() {
+    const x = v(), fin = $("fin").checked;
+    const price = Math.max(0, x.price), rent = Math.max(0, x.rent), fx = x.fx > 0 ? x.fx : 4.25;
+    const loan = fin ? price * (1 - Math.min(100, Math.max(0, x.down)) / 100) : 0;
+    const costs = price * x.dld / 100 + price * x.agent / 100 * 1.05 + x.admin + loan * 0.0025;
+    const total = price + costs;
+    const svc = x.size * x.svc;
+    const effRent = rent * (1 - x.vac / 100);
+    const running = svc + effRent * x.mgmt / 100 + price * x.maint / 100;
+    const netIncome = effRent - running;
+    const gross = price > 0 ? rent / price * 100 : 0;
+    const net = total > 0 ? netIncome / total * 100 : 0;
+
+    let monthlyLoan = 0, annualDebt = 0, interestY1 = 0;
+    if (fin && loan > 0) {
+      const r = x.rate / 100 / 12, n = Math.max(1, Math.round(x.years * 12));
+      monthlyLoan = r > 0 ? loan * r / (1 - Math.pow(1 + r, -n)) : loan / n;
+      annualDebt = monthlyLoan * 12;
+      interestY1 = loan * x.rate / 100;
+    }
+    const cashflowY = netIncome - annualDebt;
+    const equity = total - loan;
+    const coc = equity > 0 ? cashflowY / equity * 100 : 0;
+
+    $("k-net").textContent = pct(net);
+    $("k-net").className = net >= 0 ? "" : "neg";
+    $("k-gross").textContent = pct(gross);
+    $("k-cf").textContent = eur(cashflowY / 12 / fx);
+    $("k-cf").className = cashflowY >= 0 ? "pos" : "neg";
+    $("k-cf-aed").textContent = aed(cashflowY / 12) + (fin ? " nach Kreditrate" : "");
+    $("t-costs").textContent = aed(costs) + " · " + eur(costs / fx);
+    $("t-total").textContent = aed(total) + " · " + eur(total / fx);
+    $("t-svc").textContent = aed(svc);
+    $("t-eff").textContent = aed(effRent);
+    $("tr-loan").hidden = !fin; $("tr-coc").hidden = !fin;
+    $("t-loan").textContent = aed(monthlyLoan) + " · " + eur(monthlyLoan / fx);
+    $("t-coc").textContent = pct(coc);
+    $("golden").hidden = price < 2000000;
+    drawChart(price, total, netIncome, x.growth);
+  }
+
+  function drawChart(price, total, netIncome, growth) {
+    const Y = 10, W = 760, H = 300, L = 70, R = 16, T = 16, B = 34;
+    const value = [], income = [];
+    for (let y = 0; y <= Y; y++) { value.push(price * Math.pow(1 + growth / 100, y)); income.push(Math.max(0, netIncome) * y); }
+    const maxV = Math.max(...value, ...income, total) * 1.08 || 1;
+    const nice = (m) => { const p = Math.pow(10, Math.floor(Math.log10(m))); const f = m / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; };
+    const top = nice(maxV), step = top / 4;
+    const sx = y => L + (W - L - R) * y / Y, sy = n => T + (H - T - B) * (1 - n / top);
+    const path = arr => arr.map((n, i) => (i ? "L" : "M") + sx(i).toFixed(1) + " " + sy(n).toFixed(1)).join(" ");
+    const short = n => n >= 1e6 ? nf1.format(n / 1e6) + " Mio" : nf0.format(n / 1e3) + " Tsd";
+    let g = "";
+    for (let k = 0; k <= 4; k++) { const n = step * k, yy = sy(n).toFixed(1); g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + yy + '" y2="' + yy + '" stroke="var(--line)" />' + '<text x="' + (L - 8) + '" y="' + yy + '" text-anchor="end" dominant-baseline="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">' + short(n) + '</text>'; }
+    for (let y = 0; y <= Y; y += 2) g += '<text x="' + sx(y).toFixed(1) + '" y="' + (H - 10) + '" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">Jahr ' + y + '</text>';
+    const ty = sy(total).toFixed(1);
+    g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + ty + '" y2="' + ty + '" stroke="var(--muted)" stroke-dasharray="5 5" />';
+    g += '<path d="' + path(value) + " L" + sx(Y) + " " + sy(0) + " L" + sx(0) + " " + sy(0) + ' Z" fill="var(--accent)" opacity=".08" />';
+    g += '<path d="' + path(value) + '" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" />';
+    g += '<path d="' + path(income) + '" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linejoin="round" />';
+    g += '<circle cx="' + sx(Y) + '" cy="' + sy(value[Y]).toFixed(1) + '" r="5" fill="var(--accent)" />';
+    g += '<circle cx="' + sx(Y) + '" cy="' + sy(income[Y]).toFixed(1) + '" r="5" fill="var(--gold)" />';
+    g += '<text x="' + (sx(Y) - 8) + '" y="' + (sy(value[Y]) - 10).toFixed(1) + '" text-anchor="end" font-size="12" font-weight="700" fill="var(--accent)" font-family="Manrope, sans-serif">' + nf0.format(Math.round(value[Y])) + ' AED</text>';
+    g += '<text x="' + (sx(Y) - 8) + '" y="' + (sy(income[Y]) - 10).toFixed(1) + '" text-anchor="end" font-size="12" font-weight="700" fill="var(--gold)" font-family="Manrope, sans-serif">' + nf0.format(Math.round(income[Y])) + ' AED</text>';
+    $("chart").innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Wert und Mieteinnahmen über 10 Jahre">' + g + "</svg>";
+  }
+
+  calc();
+})();
+</script>
+</body></html>
